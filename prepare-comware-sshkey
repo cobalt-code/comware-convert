@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  echo "$0 id_rsa.pub (login=admin)"
+else
+login="${2-admin}"
+cat << EOF 
+public-key peer ${login}
+peer-public-key begin
+$(ssh-keygen -f $1 -e -m PEM | openssl rsa -RSAPublicKey_in -pubout 2>/dev/null | grep -v '^---' | base64 -d | od -A n -v -t x1 | tr -d ' \n' | fold -42 )
+peer-public-key end
+ssh user ${login} service-type all authentication-type all assign publickey ${admin}
+EOF
+fi
+
+# ssh-keygen -f id_rsa-2048.pub -e -m PEM | openssl rsa -RSAPublicKey_in -pubout -in id_rsa-2048.pub.rsa 2>/dev/null | grep -v '^---' | base64 -d | od -A n -v -t x1 | tr -d ' \n' | fold -42
